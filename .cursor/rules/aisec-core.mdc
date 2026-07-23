@@ -1,0 +1,37 @@
+---
+description: Load AISecCore skills for secure code generation and review
+globs: **/*
+alwaysApply: true
+---
+
+# AISecCore (Cursor adapter)
+
+This workspace uses the shared **AISecCore** pack. Do not invent parallel rules.
+
+## Skills (authoritative)
+
+Read and follow every applicable file under:
+
+`AISecCore/skills/scgra-*.md`
+
+- Skills with `alwaysApply: true` in frontmatter apply to all work.
+- Skills with `globs:` apply when editing matching paths.
+- Prefer `scgra-1-*` (credentials, crypto, certificates) over convenience.
+- Always honor `scgra-0-cwe-prevention.md` during generation and review.
+
+## Agents
+
+For an explicit security review / SARIF request, follow:
+
+`AISecCore/agents/scgra-reviewer.md`
+
+(Use the Cursor agent entry `.cursor/agents/scgra-reviewer.md`, which points here.)
+
+## Prompts
+
+Short review prompts live in `AISecCore/prompts/`. Prefer the agent procedure for full scans.
+
+## Constraints
+
+- Defensive guidance only — no exploit payloads or weaponized PoCs.
+- Skill example snippets inside `AISecCore/` are documentation, not findings.

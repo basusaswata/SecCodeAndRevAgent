@@ -1,29 +1,52 @@
 #!/usr/bin/env bash
-# Install SecureCodeGenRevAgent (SCGRA) rules into a target directory.
+# Install AISecCore + thin IDE adapters into a target app/workspace.
 #
 # Usage:
 #   ./install-to-workspace.sh [TARGET_DIR]
 #
-# TARGET_DIR defaults to /Users/saswatabasu/Saswata/eclipse-workspace
-# For a single app repo: ./install-to-workspace.sh /path/to/your-app
+# Copies:
+#   AISecCore/          → shared skills, agents, prompts
+#   .cursor/            → single Cursor adapter rule + agent pointer
+#   .github/            → single Copilot instruction + prompt pointer
+#   .claude/            → single Claude Code instruction
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TARGET="${1:-/Users/saswatabasu/Saswata/eclipse-workspace}"
+TARGET="${1:-.}"
 
-mkdir -p "${TARGET}/.cursor/rules" \
+if [[ ! -d "${SCRIPT_DIR}/AISecCore" ]]; then
+  echo "ERROR: AISecCore/ not found next to this script." >&2
+  exit 1
+fi
+
+mkdir -p "${TARGET}/AISecCore" \
+         "${TARGET}/.cursor/rules" \
          "${TARGET}/.cursor/agents" \
          "${TARGET}/.github/instructions" \
-         "${TARGET}/.github/prompts"
+         "${TARGET}/.github/prompts" \
+         "${TARGET}/.claude"
 
-cp -R "${SCRIPT_DIR}/cursor/rules/"*        "${TARGET}/.cursor/rules/"
-cp -R "${SCRIPT_DIR}/cursor/agents/"*       "${TARGET}/.cursor/agents/"
-cp -R "${SCRIPT_DIR}/github/instructions/"* "${TARGET}/.github/instructions/"
-cp -R "${SCRIPT_DIR}/github/prompts/"*      "${TARGET}/.github/prompts/"
+# Canonical content
+rsync -a --delete \
+  --exclude '.DS_Store' \
+  "${SCRIPT_DIR}/AISecCore/" "${TARGET}/AISecCore/"
 
-echo "SCGRA installed to ${TARGET}:"
-echo "  .cursor/rules ($(ls -1 "${TARGET}/.cursor/rules"/scgra-* 2>/dev/null | wc -l | tr -d ' ') files)"
-echo "  .cursor/agents"
-echo "  .github/instructions"
-echo "  .github/prompts"
+# Thin adapters (single instruction files per system)
+cp -f "${SCRIPT_DIR}/.cursor/rules/aisec-core.mdc" \
+      "${TARGET}/.cursor/rules/aisec-core.mdc"
+cp -f "${SCRIPT_DIR}/.cursor/agents/scgra-reviewer.md" \
+      "${TARGET}/.cursor/agents/scgra-reviewer.md"
+cp -f "${SCRIPT_DIR}/.github/instructions/aisec-core.instructions.md" \
+      "${TARGET}/.github/instructions/aisec-core.instructions.md"
+cp -f "${SCRIPT_DIR}/.github/prompts/scgra-reviewer.md" \
+      "${TARGET}/.github/prompts/scgra-reviewer.md"
+cp -f "${SCRIPT_DIR}/.claude/INSTRUCTIONS.md" \
+      "${TARGET}/.claude/INSTRUCTIONS.md"
+
+echo "Installed AISecCore pack to ${TARGET}:"
+echo "  AISecCore/skills   ($(ls -1 "${TARGET}/AISecCore/skills"/scgra-*.md 2>/dev/null | wc -l | tr -d ' ') skills)"
+echo "  AISecCore/agents   + prompts"
+echo "  .cursor/           (aisec-core.mdc + scgra-reviewer agent)"
+echo "  .github/           (aisec-core.instructions.md + prompt)"
+echo "  .claude/           (INSTRUCTIONS.md)"
 echo "Done."
